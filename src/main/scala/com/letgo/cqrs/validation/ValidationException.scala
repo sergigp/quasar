@@ -1,4 +1,4 @@
-package com.letgo.chat.lib.cqrs.validation
+package com.letgo.cqrs.validation
 
 import cats.data.NonEmptyList
 

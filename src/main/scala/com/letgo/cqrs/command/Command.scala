@@ -1,4 +1,4 @@
-package com.letgo.chat.lib.cqrs.command
+package com.letgo.cqrs.command
 
 abstract class Command {
   type CommandError

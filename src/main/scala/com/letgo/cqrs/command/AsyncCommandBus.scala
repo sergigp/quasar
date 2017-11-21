@@ -1,12 +1,13 @@
-package com.letgo.chat.lib.cqrs.command
+package com.letgo.cqrs.command
 
 import scala.concurrent.Future
 
 import cats.data.Validated.Valid
-import org.slf4j.Logger
+import cats.implicits._
+import ch.qos.logback.classic.Logger
 
-import com.letgo.chat.lib.cqrs.validation.Validation.Validation
-import com.letgo.chat.lib.cqrs.validation.ValidationException
+import com.letgo.cqrs.validation.ValidationException
+import com.letgo.cqrs.validation.Validation.Validation
 
 class AsyncCommandBus(logger: Logger) extends CommandBus[Future] {
 

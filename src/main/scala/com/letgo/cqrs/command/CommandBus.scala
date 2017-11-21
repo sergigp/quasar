@@ -1,4 +1,4 @@
-package com.letgo.chat.lib.cqrs.command
+package com.letgo.cqrs.command
 
 trait CommandBus[P[_]] {
   def publish[C <: Command](command: C): P[Either[C#CommandError, Unit]]

@@ -1,12 +1,12 @@
-package com.letgo.chat.lib.cqrs.query
+package com.letgo.cqrs.query
 
 import scala.concurrent.Future
 
 import cats.data.Validated.Valid
-import org.slf4j.Logger
+import ch.qos.logback.classic.Logger
 
-import com.letgo.chat.lib.cqrs.validation.Validation.Validation
-import com.letgo.chat.lib.cqrs.validation.ValidationException
+import com.letgo.cqrs.validation.ValidationException
+import com.letgo.cqrs.validation.Validation.Validation
 
 final class AsyncQueryBus(logger: Logger) extends QueryBus[Future] {
 

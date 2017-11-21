@@ -1,3 +1,3 @@
-package com.letgo.chat.lib.cqrs.validation
+package com.letgo.cqrs.validation
 
 abstract class ValidationError

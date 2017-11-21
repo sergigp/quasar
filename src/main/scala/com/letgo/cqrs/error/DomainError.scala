@@ -1,3 +1,3 @@
-package com.letgo.chat.lib.cqrs.error
+package com.letgo.cqrs.error
 
 abstract class DomainError extends Throwable

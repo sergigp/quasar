@@ -1,4 +1,4 @@
-package com.letgo.chat.lib.cqrs.query
+package com.letgo.cqrs.query
 
 trait QueryBus[P[_]] {
   def ask[Q <: Query](query: Q): P[Either[Q#QueryError, Q#QueryResponse]]
