@@ -1,12 +1,14 @@
-<p align="center">
-<img src="doc/image/quasar.png"/>
-</p>
+<img src="doc/image/quasar.png" align="left" width="128px" height="128px"/>
+<img align="left" width="0" height="128px" hspace="10"/>
 
-# Quasar
+[![letgo](https://img.shields.io/badge/letgo-quasar-red.svg?style=flat-square)](http://letgo.com)
+
+> /ˈkweɪzɑːr/ Is an active galactic nucleus of very high luminosity :dizzy:
 
 Quasar is a library to do [CQRS](https://martinfowler.com/bliki/CQRS.html) in Scala.
+<br> <br>
 
-## What is CQRS?
+## Quasar - What is CQRS?
 In **CQRS** (Command Query Responsibility Segregation) basically says that an input in a software system can change state of retrieve it but not both.
 The artifacts that we use to do CQRS are `Commands` and `Queries` and we send it through `CommandBus` and `QueryBus. At [Letgo](https://www.letgo.com) we use to append the suffix Command or Query to each one as a convention.
 
