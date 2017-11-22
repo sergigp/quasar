@@ -3,7 +3,7 @@ package com.letgo.cqrs.query
 import scala.concurrent.Future
 
 import cats.data.Validated.Valid
-import ch.qos.logback.classic.Logger
+import org.slf4j.Logger
 
 import com.letgo.cqrs.validation.ValidationException
 import com.letgo.cqrs.validation.Validation.Validation
@@ -38,5 +38,5 @@ final class AsyncQueryBus(logger: Logger) extends QueryBus[Future] {
     }
   }
 
-  private case class QueryHandlerNotFound(queryName: String) extends Throwable
+  private case class QueryHandlerNotFound(queryName: String) extends Exception(s"handler for $queryName not found")
 }
