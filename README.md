@@ -27,4 +27,4 @@ Queries only retrieves the state and are not allowed to modify it. When you ask 
 
 ## Improvements
 
-logo designed by [FreePik](https://www.flaticon.com/authors/freepik) from Flaticon
+logo designed by [FreePik](https://www.flaticon.com/authors/freepik)
