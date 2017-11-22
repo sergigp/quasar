@@ -2,16 +2,16 @@ package com.letgo.cqrs.test
 
 import scala.concurrent.Future
 
-import org.scalamock.handlers.CallHandler1
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.slf4j.helpers.NOPLogger
 
-import com.letgo.cqrs.test.dummy.DummyUser
-import com.letgo.cqrs.test.dummy.application.FindDummyUserError
-import com.letgo.cqrs.test.dummy.application.FindDummyUserError.DummyUserNotFoundError
-import com.letgo.cqrs.test.dummy.domain.find.UserFinder
+import com.letgo.cqrs.test.dummy.modules.dummyuser.DummyUser
+import com.letgo.cqrs.test.dummy.modules.dummyuser.application.add.AddDummyUserError.AddDummyUserError
+import com.letgo.cqrs.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
+import com.letgo.cqrs.test.dummy.modules.dummyuser.domain.add.UserAdder
+import com.letgo.cqrs.test.dummy.modules.dummyuser.domain.find.UserFinder
 
 abstract class TestCase
   extends WordSpecLike
@@ -28,7 +28,7 @@ abstract class TestCase
   val logger: org.slf4j.Logger = NOPLogger.NOP_LOGGER
 
   val userFinder: UserFinder = mock[UserFinder]
-
+  val userAdder: UserAdder   = mock[UserAdder]
 
   def shouldFindUser(userId: String, user: DummyUser): Unit =
     (userFinder.find _)
@@ -41,4 +41,17 @@ abstract class TestCase
       .expects(userId)
       .once()
       .returns(Future.successful(Left(DummyUserNotFoundError(userId))))
+
+  def shouldAddUser(userId: String, name: String): Unit =
+    (userAdder.add _)
+      .expects(userId, name)
+      .once()
+      .returns(Future.successful(Right(())))
+
+
+  def shouldReturnErrorAddingUser(userId: String, name: String, error: AddDummyUserError): Unit =
+    (userAdder.add _)
+      .expects(userId, name)
+      .once()
+      .returns(Future.successful(Left(error)))
 }

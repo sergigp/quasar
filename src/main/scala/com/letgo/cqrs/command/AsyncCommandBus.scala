@@ -4,7 +4,7 @@ import scala.concurrent.Future
 
 import cats.data.Validated.Valid
 import cats.implicits._
-import ch.qos.logback.classic.Logger
+import org.slf4j.Logger
 
 import com.letgo.cqrs.validation.ValidationException
 import com.letgo.cqrs.validation.Validation.Validation
@@ -25,7 +25,8 @@ class AsyncCommandBus(logger: Logger) extends CommandBus[Future] {
             CommandHandlerNotFound(command.getClass.getSimpleName)
           )
         )
-      ).valueOr(validationErrors => Future.failed(ValidationException(validationErrors)))
+      )
+      .valueOr(validationErrors => Future.failed(ValidationException(validationErrors)))
 
   override def subscribe[C <: Command](handler: CommandHandler[Future, C]): Unit =
     synchronized {
@@ -36,5 +37,5 @@ class AsyncCommandBus(logger: Logger) extends CommandBus[Future] {
       }
     }
 
-  private case class CommandHandlerNotFound(commandName: String) extends Throwable
+  private case class CommandHandlerNotFound(commandName: String) extends Exception(s"handler for $commandName not found")
 }

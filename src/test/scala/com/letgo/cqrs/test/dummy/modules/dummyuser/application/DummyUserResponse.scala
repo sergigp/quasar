@@ -1,4 +1,4 @@
-package com.letgo.cqrs.test.dummy.application
+package com.letgo.cqrs.test.dummy.modules.dummyuser.application
 
 import com.letgo.cqrs.query.QueryResponse
 

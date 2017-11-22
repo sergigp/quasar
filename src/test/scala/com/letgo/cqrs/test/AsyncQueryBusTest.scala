@@ -3,15 +3,15 @@ package com.letgo.cqrs.test
 import org.scalatest.concurrent.ScalaFutures
 
 import com.letgo.cqrs.query.AsyncQueryBus
-import com.letgo.cqrs.test.dummy.DummyUser
-import com.letgo.cqrs.test.dummy.application.DummyUserResponse
-import com.letgo.cqrs.test.dummy.application.find.{FindDummyUserQueryHandler, FindUserDummyQuery}
-import com.letgo.cqrs.test.dummy.application.FindDummyUserError.DummyUserNotFoundError
+import com.letgo.cqrs.test.dummy.modules.dummyuser.DummyUser
+import com.letgo.cqrs.test.dummy.modules.dummyuser.application.DummyUserResponse
+import com.letgo.cqrs.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, FindDummyUserQueryHandler}
+import com.letgo.cqrs.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
 import com.letgo.cqrs.test.stub.{StringStub, UuidStringStub}
 
 class AsyncQueryBusTest extends TestCase {
 
-  "A query bus" should {
+  "a query bus" should {
     "subscribe two times the same query handler without throwing error" in {
       val queryBus = new AsyncQueryBus(logger)
       queryBus.subscribe(new FindDummyUserQueryHandler(userFinder))
@@ -21,15 +21,15 @@ class AsyncQueryBusTest extends TestCase {
     "throw an error if don't find a query handler for a query" in {
       val queryBus = new AsyncQueryBus(logger)
 
-      val result = queryBus.ask(FindUserDummyQuery(UuidStringStub.random))
+      val result = queryBus.ask(FindDummyUserQuery(UuidStringStub.random))
 
       ScalaFutures.whenReady(result.failed) { e =>
-        e.getMessage should be ("handler for FindUserDummyQuery not found")
+        e.getMessage should be ("handler for FindDummyUserQuery not found")
       }
     }
   }
 
-  "A query bus client" should {
+  "a query bus client" should {
     "receive successful result if user exists" in {
       val queryBus = new AsyncQueryBus(logger)
       val dummyHandler = new FindDummyUserQueryHandler(userFinder)
@@ -41,7 +41,7 @@ class AsyncQueryBusTest extends TestCase {
 
       shouldFindUser(userId, DummyUser(userId, userName))
 
-      queryBus.ask(FindUserDummyQuery(userId)).futureValue.right.value should be (DummyUserResponse(userId, userName))
+      queryBus.ask(FindDummyUserQuery(userId)).futureValue.right.value should be (DummyUserResponse(userId, userName))
     }
 
     "receive error if user don't exists" in {
@@ -54,7 +54,7 @@ class AsyncQueryBusTest extends TestCase {
 
       shouldNotFindUser(userId)
 
-      queryBus.ask(FindUserDummyQuery(userId)).futureValue.left.value should be (DummyUserNotFoundError(userId))
+      queryBus.ask(FindDummyUserQuery(userId)).futureValue.left.value should be (DummyUserNotFoundError(userId))
     }
   }
 }
