@@ -18,12 +18,16 @@ Commands only modifies state and are not allowed to return the new one. When you
 Queries only retrieves the state and are not allowed to modify it. When you ask to query bus a query it will return a response with requested state or an error if something happened.
 
 ## Async?
-
 Quasar provides two interfaces `CommandBus` and `QueryBus` that accepts a type parameter `P`. Quasar also provides Async implementations of each bus powered by Scala `Future`.
 
 ## Install
+Add the bintray resolver and the dependency in your `build.sbt`
 
-TBD
+```
+resolvers += Resolver.bintrayRepo("sergigp", "maven")
+
+libraryDependencies ++= Seq("com.sergigp.quasar" %% "quasar" % "0.1")
+```
 
 ## Usage
 
