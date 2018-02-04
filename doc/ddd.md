@@ -15,3 +15,5 @@ case class User(id: UserId, name: String, email: Email)
 Take account that the identity of a `User` it's defined by it's id and not by the rest of its attributes. If you take an instance of a `User` and change its email, the identity of the user it's still the same.
 
 ##Module
+
+TBD
