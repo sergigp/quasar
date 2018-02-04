@@ -1,7 +1,8 @@
 <img src="doc/image/quasar.png" align="left" width="128px" height="128px"/>
 <img align="left" width="0" height="128px" hspace="10"/>
 
-[![letgo](https://img.shields.io/badge/letgo-quasar-red.svg?style=flat-square)](http://letgo.com)
+[![letgo](https://img.shields.io/badge/letgo-quasar-blue.svg?style=flat-square)](http://letgo.com)
+[![Build Status](https://travis-ci.org/sergigp/quasar.svg?branch=master)](https://travis-ci.org/sergigp/quasar)
 
 > /ˈkweɪzɑːr/ Is an active galactic nucleus of very high luminosity :dizzy:
 
