@@ -1,8 +1,12 @@
 # Quasar usage
 
-## Quasar deconstructed
+## DDD in a nutshell
+At Letgo we use some Domain Driven Design techniques for developing software. Using Quasar with DDD is completely optional but we encourage you, at least, to know the basic building blocks in DDD for improve your design with Quasar.
+- Value Object
+- Aggregate Root
+- Module
 
-## DDD and modules
+## Quasar deconstructed
 
 ## Example with Users Module
 
