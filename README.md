@@ -10,7 +10,7 @@ Quasar is a library to do [CQRS](https://martinfowler.com/bliki/CQRS.html) in Sc
 
 ## Quasar - What is CQRS?
 In **CQRS** (Command Query Responsibility Segregation) basically says that an input in a software system can change state of retrieve it but not both.
-The artifacts that we use to do CQRS are `Commands` and `Queries` and we send it through `CommandBus` and `QueryBus. At [Letgo](https://www.letgo.com) we use to append the suffix Command or Query to each one as a convention.
+The artifacts that we use to do CQRS are `Commands` and `Queries` and we send it through `CommandBus` and `QueryBus`. We suggest append the suffix Command or Query to each one as a convention.
 
 Some examples of commands and queries: `AddUserCommand`, `SendMessageCommand`, `UpdateProductPriceCommand`, `FindUserQuery`, `FetchMessagesQuery`, ... 
 
@@ -19,7 +19,7 @@ Queries only retrieves the state and are not allowed to modify it. When you ask 
 
 ## Async?
 
-Quasar provides two interfaces `CommandBus` and `QueryBus` that accepts a type parameter `P`. Quasar also provides Async implementations of each bus powered by Scala `Future`. So you can take advantage of scala asynchronous mechanisms to ask queries and publish commands! 
+Quasar provides two interfaces `CommandBus` and `QueryBus` that accepts a type parameter `P`. Quasar also provides Async implementations of each bus powered by Scala `Future`.
 
 ## Install
 
@@ -27,7 +27,7 @@ TBD
 
 ## Usage
 
-You can visit our [doc](doc/index.md) to learn to use Quasar
+You can visit our [doc](doc/index.md) to learn how to use Quasar
 
 ## Improvements
 
