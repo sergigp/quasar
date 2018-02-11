@@ -17,4 +17,7 @@ We send commands through `QueryBus`. We suggest append the suffix Query on each 
 Some examples of queries: `FindUserQuery`, `FetchMessagesQuery`, ... 
 
 ## Response
-TBD
+A `Response` is what `QueryBus` returns us when a query is asked. 
+It's important to force us to do not include domain objects in responses. Our recommendation is to only use scalar data types in `Responses` with some exceptions (DateTime, etc). The main goal of this "rule" is to not couple modules [(explained in DDD section)](ddd.md).
+
+Some examples of responses: `UserResponse`, `ConversationMessagesResponse`, ... 

@@ -1,4 +1,6 @@
-# DDD concepts
+# Domain Driven Design (DDD) concepts
+
+We won't enter too much in the theory but We will explain briefly some concepts in DDD that fore sure you already know wit other names.
 
 ## Value Object
 A Value Object (VO) is an object that means something at domain level and its identity is defined by its value. The typical example is the object `Currency`
@@ -16,4 +18,7 @@ Take account that the identity of a `User` it's defined by it's id and not by th
 
 ##Module
 
-TBD
+Ah module is a bunch of code that relates to an specific concept in the business model of our app. Some examples of modules can be `User`, `Invoice`, `Messages`, ...
+
+The communication between modules will be made though command bus and query bus (and event bus) in order to decouple logic. 
+This strategy will help us to scale our codebase. If our `User` module grows a lot and we take the decission to isolate all the logic in another microservice we should not have to change a lot of our app because de loose coupling of all our business logic with `User` module.
