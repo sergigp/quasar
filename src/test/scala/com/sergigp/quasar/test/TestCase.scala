@@ -52,5 +52,5 @@ abstract class TestCase
     (userAdder.add _)
       .expects(userId, name)
       .once()
-      .returns(Future.successful(Left(error)))
+      .returns(Future.failed(error))
 }
