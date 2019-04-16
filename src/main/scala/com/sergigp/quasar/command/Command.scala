@@ -1,3 +1,5 @@
 package com.sergigp.quasar.command
 
-abstract class Command
+abstract class Command {
+  type CommandError
+}

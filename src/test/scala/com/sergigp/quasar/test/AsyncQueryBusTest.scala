@@ -38,7 +38,7 @@ class AsyncQueryBusTest extends TestCase {
 
       shouldFindUser(userId, DummyUser(userId, userName))
 
-      queryBus.ask(FindDummyUserQuery(userId)).futureValue should be (DummyUserResponse(userId, userName))
+      queryBus.ask(FindDummyUserQuery(userId)).futureValue.right.value should be (DummyUserResponse(userId, userName))
     }
 
     "receive error if user don't exists" in {
@@ -51,9 +51,7 @@ class AsyncQueryBusTest extends TestCase {
 
       val result = queryBus.ask(FindDummyUserQuery(userId))
 
-      ScalaFutures.whenReady(result.failed) { e =>
-        e should be (DummyUserNotFoundError(userId))
-      }
+      result.futureValue.left.value should be (DummyUserNotFoundError(userId))
     }
   }
 }

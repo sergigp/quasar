@@ -33,13 +33,13 @@ abstract class TestCase
     (userFinder.find _)
       .expects(userId)
       .once()
-      .returns(Future.successful(user))
+      .returns(Future.successful(Right(user)))
 
   def shouldNotFindUser(userId: String): Unit =
     (userFinder.find _)
       .expects(userId)
       .once()
-      .returns(Future.failed(DummyUserNotFoundError(userId)))
+      .returns(Future.successful(Left(DummyUserNotFoundError(userId))))
 
   def shouldAddUser(userId: String, name: String): Unit =
     (userAdder.add _)
@@ -52,5 +52,5 @@ abstract class TestCase
     (userAdder.add _)
       .expects(userId, name)
       .once()
-      .returns(Future.failed(error))
+      .returns(Future.successful(Left(error)))
 }
