@@ -11,13 +11,13 @@ import org.scalatest.concurrent.ScalaFutures
 class AsyncCommandBusTest extends TestCase {
   "a command bus" should {
     "subscribe two times the same command handler without throwing error" in {
-      val commandBus = new AsyncCommandBus[Command](logger)
+      val commandBus = new AsyncCommandBus(logger)
       commandBus.subscribe[AddDummyUserCommand](CommandHandlers.dummyHandler)
       commandBus.subscribe[AddDummyUserCommand](CommandHandlers.dummyHandler)
     }
 
     "throw an error if don't find a command handler for a command" in {
-      val commandBus = new AsyncCommandBus[Command](logger)
+      val commandBus = new AsyncCommandBus(logger)
 
       val result = commandBus.publish(AddDummyUserCommand(UuidStringStub.random, StringStub.random(10)))
 
@@ -29,7 +29,7 @@ class AsyncCommandBusTest extends TestCase {
 
   "a command bus client" should {
     "receive successful result if user is added" in {
-      val commandBus = new AsyncCommandBus[Command](logger)
+      val commandBus = new AsyncCommandBus(logger)
 
       val userId = UuidStringStub.random
       val userName = StringStub.random(10)
@@ -41,7 +41,7 @@ class AsyncCommandBusTest extends TestCase {
     }
 
     "compose multiple handlers" in {
-      val commandBus = new AsyncCommandBus[Command](logger)
+      val commandBus = new AsyncCommandBus(logger)
 
       val userId = UuidStringStub.random
       val userName = StringStub.random(10)
@@ -61,7 +61,7 @@ class AsyncCommandBusTest extends TestCase {
     }
 
     "receive error if user already exists" in {
-      val commandBus = new AsyncCommandBus[Command](logger)
+      val commandBus = new AsyncCommandBus(logger)
       val userId = UuidStringStub.random
       val userName = StringStub.random(10)
 
