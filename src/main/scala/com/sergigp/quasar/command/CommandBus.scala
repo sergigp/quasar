@@ -1,7 +1,9 @@
 package com.sergigp.quasar.command
 
-trait CommandBus[P[_]] {
-  def publish[C <: Command](command: C): P[Either[C#CommandError, Unit]]
+import scala.reflect.ClassTag
 
-  def subscribe[C <: Command](handler: CommandHandler[P, C])
+trait CommandBus[P[_], C <: Command] {
+  def publish(command: C): P[Either[C#CommandError, Unit]]
+
+  def subscribe[HT <: C: ClassTag](handler: HT => P[Either[HT#CommandError, Unit]]): Unit
 }

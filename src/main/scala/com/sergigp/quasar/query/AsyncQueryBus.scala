@@ -1,38 +1,30 @@
 package com.sergigp.quasar.query
 
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
-import cats.data.Validated.Valid
-import com.sergigp.quasar.validation.ValidationException
-import com.sergigp.quasar.validation.Validation.Validation
 import org.slf4j.Logger
 
-final class AsyncQueryBus(logger: Logger) extends QueryBus[Future] {
+final class AsyncQueryBus[Q <: Query](logger: Logger) extends QueryBus[Future, Q] {
 
-  private var handlers: Map[Class[_], QueryHandler[Future, _ <: Query]] =
-    Map.empty
+  private var handlers: Map[Class[_], Q => Future[Either[Q#QueryError, Q#QueryResponse]]] = Map.empty
 
-  override def ask[QueryType <: Query](
-      query: QueryType
-  ): Future[Either[QueryType#QueryError, QueryType#QueryResponse]] =
+  override def ask(query: Q): Future[Either[Q#QueryError, Q#QueryResponse]] =
     handlers
-      .get(query.getClass)
-      .map(_.unsafe(query).asInstanceOf[Validation[
-        Future[Either[QueryType#QueryError, QueryType#QueryResponse]]]])
-      .getOrElse(
-        Valid(
-          Future.failed[Either[QueryType#QueryError, QueryType#QueryResponse]](
-            QueryHandlerNotFound(query.getClass.getSimpleName)
-          )
-        )
-      ).valueOr(validationErrors => Future.failed(ValidationException(validationErrors)))
+      .get(query.getClass) match {
+      case Some(handler) => handler(query)
+      case None          => Future.failed(QueryHandlerNotFound(query.getClass.getSimpleName))
+    }
 
-  override def subscribe[Q <: Query](handler: QueryHandler[Future, Q]): Unit = {
+  override def subscribe[HT <: Q: ClassTag](handler: HT => Future[Either[HT#QueryError, HT#QueryResponse]]): Unit = {
+    val classTag = implicitly[ClassTag[HT]]
+
     synchronized {
-      if (handlers.contains(handler.queryClass.runtimeClass)) {
+      if (handlers.contains(classTag.runtimeClass)) {
         logger.error("handler already subscribed", "handler_name" -> handler.getClass.getSimpleName)
       } else {
-        handlers = handlers + (handler.queryClass.runtimeClass -> handler)
+        val transformed: Q => Future[Either[HT#QueryError, HT#QueryResponse]] = (t: Q) => handler(t.asInstanceOf[HT])
+        handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }
   }

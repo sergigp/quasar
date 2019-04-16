@@ -1,27 +1,24 @@
 package com.sergigp.quasar.test
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
+import com.sergigp.quasar.query.{AsyncQueryBus, Query}
 import com.sergigp.quasar.test.dummy.modules.dummyuser.DummyUser
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.DummyUserResponse
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, FindDummyUserQueryHandler}
+import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, QueryHandlers}
+import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
 import org.scalatest.concurrent.ScalaFutures
-
-import com.sergigp.quasar.query.AsyncQueryBus
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
 
 class AsyncQueryBusTest extends TestCase {
 
   "a query bus" should {
     "subscribe two times the same query handler without throwing error" in {
-      val queryBus = new AsyncQueryBus(logger)
-      queryBus.subscribe(new FindDummyUserQueryHandler(userFinder))
-      queryBus.subscribe(new FindDummyUserQueryHandler(userFinder))
+      val queryBus = new AsyncQueryBus[Query](logger)
+      queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
+      queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
     }
 
     "throw an error if don't find a query handler for a query" in {
-      val queryBus = new AsyncQueryBus(logger)
+      val queryBus = new AsyncQueryBus[Query](logger)
 
       val result = queryBus.ask(FindDummyUserQuery(UuidStringStub.random))
 
@@ -33,10 +30,8 @@ class AsyncQueryBusTest extends TestCase {
 
   "a query bus client" should {
     "receive successful result if user exists" in {
-      val queryBus = new AsyncQueryBus(logger)
-      val dummyHandler = new FindDummyUserQueryHandler(userFinder)
-
-      queryBus.subscribe(dummyHandler)
+      val queryBus = new AsyncQueryBus[Query](logger)
+      queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
 
       val userId = UuidStringStub.random
       val userName = StringStub.random(10)
@@ -47,16 +42,16 @@ class AsyncQueryBusTest extends TestCase {
     }
 
     "receive error if user don't exists" in {
-      val queryBus = new AsyncQueryBus(logger)
-      val dummyHandler = new FindDummyUserQueryHandler(userFinder)
-
-      queryBus.subscribe(dummyHandler)
+      val queryBus = new AsyncQueryBus[Query](logger)
+      queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
 
       val userId = UuidStringStub.random
 
       shouldNotFindUser(userId)
 
-      queryBus.ask(FindDummyUserQuery(userId)).futureValue.left.value should be (DummyUserNotFoundError(userId))
+      val result = queryBus.ask(FindDummyUserQuery(userId))
+
+      result.futureValue.left.value should be (DummyUserNotFoundError(userId))
     }
   }
 }

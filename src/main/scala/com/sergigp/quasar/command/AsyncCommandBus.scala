@@ -1,40 +1,33 @@
 package com.sergigp.quasar.command
 
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
-import cats.data.Validated.Valid
-import cats.implicits._
-import com.sergigp.quasar.validation.ValidationException
-import com.sergigp.quasar.validation.Validation.Validation
 import org.slf4j.Logger
 
-class AsyncCommandBus(logger: Logger) extends CommandBus[Future] {
+class AsyncCommandBus[C <: Command](logger: Logger) extends CommandBus[Future, C] {
 
-  private var handlers: Map[Class[_], CommandHandler[Future, _ <: Command]] = Map.empty
+  private var handlers = Map.empty[Class[_], C => Future[Either[C#CommandError, Unit]]]
 
-  override def publish[C <: Command](
-    command: C
-  ): Future[Either[C#CommandError, Unit]] =
+  override def publish(command: C): Future[Either[C#CommandError, Unit]] =
     handlers
-      .get(command.getClass)
-      .map(_.unsafe(command).asInstanceOf[Validation[Future[Either[C#CommandError, Unit]]]])
-      .getOrElse(
-        Valid(
-          Future.failed[Either[C#CommandError, Unit]](
-            CommandHandlerNotFound(command.getClass.getSimpleName)
-          )
-        )
-      )
-      .valueOr(validationErrors => Future.failed(ValidationException(validationErrors)))
-
-  override def subscribe[C <: Command](handler: CommandHandler[Future, C]): Unit =
-    synchronized {
-      if (handlers.contains(handler.commandClass.runtimeClass)) {
-        logger.error("handler already subscribed", "handler_name" -> handler.getClass.getSimpleName)
-      } else {
-        handlers = handlers + (handler.commandClass.runtimeClass -> handler)
-      }
+      .get(command.getClass) match {
+      case Some(handler) => handler(command)
+      case None          => Future.failed(CommandHandlerNotFound(command.getClass.getSimpleName))
     }
 
-  private case class CommandHandlerNotFound(commandName: String) extends Exception(s"handler for $commandName not found")
+  override def subscribe[H <: C: ClassTag](handler: H => Future[Either[H#CommandError, Unit]]): Unit = {
+    val classTag = implicitly[ClassTag[H]]
+
+    synchronized {
+      if (handlers.contains(classTag.runtimeClass)) {
+        logger.error("handler already subscribed", "handler_name" -> handler.getClass.getSimpleName)
+      } else {
+        val transformed: C => Future[Either[C#CommandError, Unit]] = (t: C) => handler(t.asInstanceOf[H])
+        handlers = handlers + (classTag.runtimeClass -> transformed)
+      }
+    }
+  }
+
+  case class CommandHandlerNotFound(commandName: String) extends Exception(s"handler for $commandName not found")
 }
