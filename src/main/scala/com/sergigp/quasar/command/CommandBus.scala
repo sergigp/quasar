@@ -1,9 +1,10 @@
 package com.sergigp.quasar.command
 
+import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-trait CommandBus[P[_], C <: Command] {
-  def publish(command: C): P[Either[C#CommandError, Unit]]
+trait CommandBus[P[_]] {
+  def publish[C <: Command](command: C): Future[C#CommandReturnType]
 
-  def subscribe[HT <: C: ClassTag](handler: HT => P[Either[HT#CommandError, Unit]]): Unit
+  def subscribe[C <: Command: ClassTag](handler: C => Future[C#CommandReturnType]): Unit
 }

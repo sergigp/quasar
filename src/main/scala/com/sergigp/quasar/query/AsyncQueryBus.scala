@@ -1,29 +1,29 @@
 package com.sergigp.quasar.query
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 import org.slf4j.Logger
 
-final class AsyncQueryBus[Q <: Query](logger: Logger) extends QueryBus[Future, Q] {
+final class AsyncQueryBus(logger: Logger)(implicit ec: ExecutionContext) extends QueryBus[Future] {
 
-  private var handlers: Map[Class[_], Q => Future[Either[Q#QueryError, Q#QueryResponse]]] = Map.empty
+  private var handlers: Map[Class[_], Query => Future[Any]] = Map.empty
 
-  override def ask(query: Q): Future[Either[Q#QueryError, Q#QueryResponse]] =
+  override def ask[Q <: Query](query: Q): Future[Q#QueryResponse] =
     handlers
       .get(query.getClass) match {
-      case Some(handler) => handler(query)
+      case Some(handler) => handler(query).map(_.asInstanceOf[Q#QueryResponse])
       case None          => Future.failed(QueryHandlerNotFound(query.getClass.getSimpleName))
     }
 
-  override def subscribe[HT <: Q: ClassTag](handler: HT => Future[Either[HT#QueryError, HT#QueryResponse]]): Unit = {
-    val classTag = implicitly[ClassTag[HT]]
+  override def subscribe[Q <: Query: ClassTag](handler: Q => Future[Q#QueryResponse]): Unit = {
+    val classTag = implicitly[ClassTag[Q]]
 
     synchronized {
       if (handlers.contains(classTag.runtimeClass)) {
         logger.error("handler already subscribed", "handler_name" -> handler.getClass.getSimpleName)
       } else {
-        val transformed: Q => Future[Either[HT#QueryError, HT#QueryResponse]] = (t: Q) => handler(t.asInstanceOf[HT])
+        val transformed: Query => Future[Any] = (t: Query) => handler(t.asInstanceOf[Q])
         handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }

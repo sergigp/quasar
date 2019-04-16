@@ -1,5 +1,8 @@
 package com.sergigp.quasar.test
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.sergigp.quasar.query.{AsyncQueryBus, Query}
 import com.sergigp.quasar.test.dummy.modules.dummyuser.DummyUser
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.DummyUserResponse
@@ -12,13 +15,13 @@ class AsyncQueryBusTest extends TestCase {
 
   "a query bus" should {
     "subscribe two times the same query handler without throwing error" in {
-      val queryBus = new AsyncQueryBus[Query](logger)
+      val queryBus = new AsyncQueryBus(logger)
       queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
       queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
     }
 
     "throw an error if don't find a query handler for a query" in {
-      val queryBus = new AsyncQueryBus[Query](logger)
+      val queryBus = new AsyncQueryBus(logger)
 
       val result = queryBus.ask(FindDummyUserQuery(UuidStringStub.random))
 
@@ -30,7 +33,7 @@ class AsyncQueryBusTest extends TestCase {
 
   "a query bus client" should {
     "receive successful result if user exists" in {
-      val queryBus = new AsyncQueryBus[Query](logger)
+      val queryBus = new AsyncQueryBus(logger)
       queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
 
       val userId = UuidStringStub.random
@@ -42,7 +45,7 @@ class AsyncQueryBusTest extends TestCase {
     }
 
     "receive error if user don't exists" in {
-      val queryBus = new AsyncQueryBus[Query](logger)
+      val queryBus = new AsyncQueryBus(logger)
       queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
 
       val userId = UuidStringStub.random
