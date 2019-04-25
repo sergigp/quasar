@@ -10,8 +10,7 @@ object CommandHandlers {
     (_: AddDummyUserCommand) => Future.successful(Right(()))
 
   def handlerWithService(
-    userAdder: UserAdder,
-    id: String, name: String
+    userAdder: UserAdder
   ): AddDummyUserCommand => Future[Either[AddDummyUserError, Unit]] =
-    (_: AddDummyUserCommand) => userAdder.add(id, name)
+    (e: AddDummyUserCommand) => userAdder.add(e.id, e.name, e.email)
 }

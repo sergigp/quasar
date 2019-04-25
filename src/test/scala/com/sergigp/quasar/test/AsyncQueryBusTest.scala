@@ -26,7 +26,7 @@ class AsyncQueryBusTest extends TestCase {
       val result = queryBus.ask(FindDummyUserQuery(UuidStringStub.random))
 
       ScalaFutures.whenReady(result.failed) { e =>
-        e.getMessage should be ("handler for FindDummyUserQuery not found")
+        e.getMessage should be("handler for FindDummyUserQuery not found")
       }
     }
   }
@@ -36,12 +36,15 @@ class AsyncQueryBusTest extends TestCase {
       val queryBus = new AsyncQueryBus(logger)
       queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
 
-      val userId = UuidStringStub.random
-      val userName = StringStub.random(10)
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
 
-      shouldFindUser(userId, DummyUser(userId, userName))
+      shouldFindUser(userId, DummyUser(userId, userName, userEmail))
 
-      queryBus.ask(FindDummyUserQuery(userId)).futureValue.right.value should be (DummyUserResponse(userId, userName))
+      queryBus.ask(FindDummyUserQuery(userId)).futureValue.right.value should be(
+        DummyUserResponse(userId, userName, userEmail)
+      )
     }
 
     "receive error if user don't exists" in {
@@ -54,7 +57,7 @@ class AsyncQueryBusTest extends TestCase {
 
       val result = queryBus.ask(FindDummyUserQuery(userId))
 
-      result.futureValue.left.value should be (DummyUserNotFoundError(userId))
+      result.futureValue.left.value should be(DummyUserNotFoundError(userId))
     }
   }
 }
