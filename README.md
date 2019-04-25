@@ -9,6 +9,8 @@
 Quasar is a library to do [CQRS](https://martinfowler.com/bliki/CQRS.html) in Scala.
 <br> <br>
 
+**TBD: Currently this doc is deprecated. See the code to see how it works.**
+
 ## Async?
 Quasar provides two interfaces `CommandBus` and `QueryBus` that accepts a type parameter `P`. Quasar also provides Async implementations of each bus powered by Scala `Future`.
 

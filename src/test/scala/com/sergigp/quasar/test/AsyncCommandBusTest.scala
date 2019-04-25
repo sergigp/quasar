@@ -19,10 +19,12 @@ class AsyncCommandBusTest extends TestCase {
     "throw an error if don't find a command handler for a command" in {
       val commandBus = new AsyncCommandBus(logger)
 
-      val result = commandBus.publish(AddDummyUserCommand(UuidStringStub.random, StringStub.random(10)))
+      val result = commandBus.publish(
+        AddDummyUserCommand(UuidStringStub.random, StringStub.random(10), StringStub.random(10))
+      )
 
       ScalaFutures.whenReady(result.failed) { e =>
-        e.getMessage should be ("handler for AddDummyUserCommand not found")
+        e.getMessage should be("handler for AddDummyUserCommand not found")
       }
     }
   }
@@ -31,46 +33,50 @@ class AsyncCommandBusTest extends TestCase {
     "receive successful result if user is added" in {
       val commandBus = new AsyncCommandBus(logger)
 
-      val userId = UuidStringStub.random
-      val userName = StringStub.random(10)
-      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder, userId, userName))
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder))
 
-      shouldAddUser(userId, userName)
+      shouldAddUser(userId, userName, userEmail)
 
-      commandBus.publish(AddDummyUserCommand(userId, userName)).futureValue.right.value should be (())
+      commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.right.value should be(())
     }
 
     "compose multiple handlers" in {
       val commandBus = new AsyncCommandBus(logger)
 
-      val userId = UuidStringStub.random
-      val userName = StringStub.random(10)
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
 
       val handler = (c: AddDummyUserCommand) => {
         for {
-          _ <- CommandHandlers.handlerWithService(userAdder, userId, userName)(c)
-          b <- CommandHandlers.handlerWithService(userAdder, userId, userName)(c)
+          _ <- CommandHandlers.handlerWithService(userAdder)(c)
+          b <- CommandHandlers.handlerWithService(userAdder)(c)
         } yield b
       }
 
       commandBus.subscribe[AddDummyUserCommand](handler)
-      shouldAddUser(userId, userName)
-      shouldAddUser(userId, userName)
+      shouldAddUser(userId, userName, userEmail)
+      shouldAddUser(userId, userName, userEmail)
 
-      commandBus.publish(AddDummyUserCommand(userId, userName)).futureValue.right.value should be (())
+      commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.right.value should be(())
     }
 
     "receive error if user already exists" in {
       val commandBus = new AsyncCommandBus(logger)
-      val userId = UuidStringStub.random
-      val userName = StringStub.random(10)
+      val userId     = UuidStringStub.random
+      val userName   = StringStub.random(10)
+      val userEmail  = StringStub.random(10)
 
-      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder, userId, userName))
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder)
+      )
       val expectedError = DummyUserAlreadyExists(userId)
 
-      shouldReturnErrorAddingUser(userId, userName, expectedError)
+      shouldReturnErrorAddingUser(userId, userName, userEmail, expectedError)
 
-      commandBus.publish(AddDummyUserCommand(userId, userName)).futureValue.left.value should be (expectedError)
+      commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.left.value should be(expectedError)
     }
   }
 }
