@@ -2,7 +2,7 @@ package com.sergigp.quasar.test
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.sergigp.quasar.command.{AsyncCommandBus, Command}
+import com.sergigp.quasar.command.AsyncCommandBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.{AddDummyUserCommand, CommandHandlers}
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.AddDummyUserError.DummyUserAlreadyExists
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}

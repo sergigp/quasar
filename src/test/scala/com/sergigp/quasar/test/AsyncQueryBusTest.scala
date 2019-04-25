@@ -1,9 +1,8 @@
 package com.sergigp.quasar.test
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.sergigp.quasar.query.{AsyncQueryBus, Query}
+import com.sergigp.quasar.query.AsyncQueryBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.DummyUser
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.DummyUserResponse
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, QueryHandlers}

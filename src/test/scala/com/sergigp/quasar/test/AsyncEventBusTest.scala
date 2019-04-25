@@ -2,14 +2,8 @@ package com.sergigp.quasar.test
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.sergigp.quasar.command.AsyncCommandBus
 import com.sergigp.quasar.event.AsyncEventBus
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.{
-  AddDummyUserCommand,
-  CommandHandlers,
-  EventHandlers
-}
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.AddDummyUserError.DummyUserAlreadyExists
+import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.EventHandlers
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.event.UserCreatedDomainEvent
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
 import org.scalatest.concurrent.ScalaFutures
@@ -22,7 +16,7 @@ class AsyncEventBusTest extends TestCase {
       eventBus.subscribe[UserCreatedDomainEvent](EventHandlers.dummyHandler)
     }
 
-    "throw an error if don't find a command handler for a command" in {
+    "throw an error if don't find a event handler for an event" in {
       val eventBus = new AsyncEventBus(logger)
 
       val result = eventBus.publish(
