@@ -7,23 +7,23 @@ import org.slf4j.Logger
 
 class AsyncEventBus(logger: Logger)(implicit ec: ExecutionContext) extends EventBus[Future] {
 
-  private var handlers = Map.empty[Class[_], Event => Future[Any]]
+  private var handlers = Map.empty[Class[_], Event => Future[Unit]]
 
-  override def publish[E <: Event](command: E): Future[E#EventReturnType] =
+  override def publish[E <: Event](event: E): Future[Unit] =
     handlers
-      .get(command.getClass) match {
-      case Some(handler) => handler(command).map(_.asInstanceOf[E#EventReturnType])
-      case None          => Future.failed(EventHandlerNotFound(command.getClass.getSimpleName))
+      .get(event.getClass) match {
+      case Some(handler) => handler(event)
+      case None          => Future.failed(EventHandlerNotFound(event.getClass.getSimpleName))
     }
 
-  override def subscribe[E <: Event: ClassTag](handler: E => Future[E#EventReturnType]): Unit = {
+  override def subscribe[E <: Event: ClassTag](handler: E => Future[Unit]): Unit = {
     val classTag = implicitly[ClassTag[E]]
 
     synchronized {
       if (handlers.contains(classTag.runtimeClass)) {
         logger.error("handler already subscribed", "handler_name" -> handler.getClass.getSimpleName)
       } else {
-        val transformed: Event => Future[Any] = (t: Event) => handler(t.asInstanceOf[E])
+        val transformed: Event => Future[Unit] = (t: Event) => handler(t.asInstanceOf[E])
         handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }
