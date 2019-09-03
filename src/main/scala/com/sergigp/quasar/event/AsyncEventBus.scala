@@ -5,14 +5,19 @@ import scala.reflect.ClassTag
 
 import org.slf4j.Logger
 
-class AsyncEventBus(logger: Logger)(implicit ec: ExecutionContext) extends EventBus[Future] {
+class AsyncEventBus(
+  logger: Logger,
+  onSuccess: String => Unit = _ => (),
+  onFailure: Throwable => Unit = _ => ()
+)(implicit ec: ExecutionContext)
+    extends EventBus[Future] {
 
   private var handlers = Map.empty[Class[_], Event => Future[Unit]]
 
   override def publish[E <: Event](event: E): Future[Unit] =
     handlers
       .get(event.getClass) match {
-      case Some(handler) => handler(event)
+      case Some(handler) => handleEvent(event, handler)
       case None          => Future.failed(EventHandlerNotFound(event.getClass.getSimpleName))
     }
 
@@ -27,6 +32,15 @@ class AsyncEventBus(logger: Logger)(implicit ec: ExecutionContext) extends Event
         handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }
+  }
+
+  private def handleEvent[E <: Event](event: E, handler: E => Future[Unit]): Future[Unit] = {
+    val asyncResult = handler(event).map { result =>
+      onSuccess(event.getClass.getSimpleName)
+      result
+    }
+    asyncResult.failed.foreach(onFailure)
+    asyncResult
   }
 
   case class EventHandlerNotFound(eventName: String) extends Exception(s"handler for $eventName not found")

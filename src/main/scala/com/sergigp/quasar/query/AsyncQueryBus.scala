@@ -5,14 +5,19 @@ import scala.reflect.ClassTag
 
 import org.slf4j.Logger
 
-final class AsyncQueryBus(logger: Logger)(implicit ec: ExecutionContext) extends QueryBus[Future] {
+final class AsyncQueryBus(
+  logger: Logger,
+  onSuccess: String => Unit = _ => (),
+  onFailure: Throwable => Unit = _ => ()
+)(implicit ec: ExecutionContext)
+    extends QueryBus[Future] {
 
   private var handlers: Map[Class[_], Query => Future[Any]] = Map.empty
 
   override def ask[Q <: Query](query: Q): Future[Q#QueryResponse] =
     handlers
       .get(query.getClass) match {
-      case Some(handler) => handler(query).map(_.asInstanceOf[Q#QueryResponse])
+      case Some(handler) => handleQuery(query, handler)
       case None          => Future.failed(QueryHandlerNotFound(query.getClass.getSimpleName))
     }
 
@@ -27,6 +32,15 @@ final class AsyncQueryBus(logger: Logger)(implicit ec: ExecutionContext) extends
         handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }
+  }
+
+  private def handleQuery[Q <: Query](query: Q, handler: Q => Future[Any]): Future[Q#QueryResponse] = {
+    val asyncResult = handler(query).map(_.asInstanceOf[Q#QueryResponse]).map { result =>
+      onSuccess(query.getClass.getSimpleName)
+      result
+    }
+    asyncResult.failed.foreach(onFailure)
+    asyncResult
   }
 
   private case class QueryHandlerNotFound(queryName: String) extends Exception(s"handler for $queryName not found")

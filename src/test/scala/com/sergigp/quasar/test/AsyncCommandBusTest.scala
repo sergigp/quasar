@@ -27,10 +27,45 @@ class AsyncCommandBusTest extends TestCase {
         e.getMessage should be("handler for AddDummyUserCommand not found")
       }
     }
-  }
 
-  "a command bus client" should {
-    "receive successful result if user is added" in {
+    "invoke onsuccess hook when success happens" in {
+      var calls = List.empty[String]
+      val successHandler: String => Unit = { command: String =>
+        calls = calls :+ command
+      }
+
+      val commandBus = new AsyncCommandBus(logger, onSuccess = successHandler)
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.dummyHandler)
+
+      val result = commandBus.publish(
+        AddDummyUserCommand(UuidStringStub.random, StringStub.random(10), StringStub.random(10))
+      )
+
+      result.futureValue should be(Right(()))
+      calls should be(List("AddDummyUserCommand"))
+    }
+
+    "invoke onfailure hook when failure happens" in {
+      var calls = List.empty[String]
+      val failedHandler: Throwable => Unit = { error: Throwable =>
+        calls = calls :+ error.getMessage
+      }
+
+      val commandBus = new AsyncCommandBus(logger, onFailure = failedHandler)
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.dummyFailingHandler)
+
+      val result = commandBus.publish(
+        AddDummyUserCommand(UuidStringStub.random, StringStub.random(10), StringStub.random(10))
+      )
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e.getMessage should be("expected exception")
+      }
+
+      calls should be(List("expected exception"))
+    }
+
+    "return successful result if user is added" in {
       val commandBus = new AsyncCommandBus(logger)
 
       val userId    = UuidStringStub.random
@@ -64,19 +99,20 @@ class AsyncCommandBusTest extends TestCase {
       commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.right.value should be(())
     }
 
-    "receive error if user already exists" in {
+    "return an error if user already exists" in {
       val commandBus = new AsyncCommandBus(logger)
       val userId     = UuidStringStub.random
       val userName   = StringStub.random(10)
       val userEmail  = StringStub.random(10)
 
-      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder)
-      )
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.handlerWithService(userAdder))
       val expectedError = DummyUserAlreadyExists(userId)
 
       shouldReturnErrorAddingUser(userId, userName, userEmail, expectedError)
 
-      commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.left.value should be(expectedError)
+      commandBus.publish(AddDummyUserCommand(userId, userName, userEmail)).futureValue.left.value should be(
+        expectedError
+      )
     }
   }
 }
