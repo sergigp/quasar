@@ -1,7 +1,7 @@
 organization := "com.sergigp.quasar"
 name := "quasar"
 
-version := "0.4"
+version := "0.5"
 
 homepage := Some(url("https://github.com/sergigp/quasar"))
 
@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
 )
 
 addCommandAlias("c", "compile")
+addCommandAlias("prep", ";scalastyle;test:scalastyle;scalafmtCheck;test:scalafmtCheck")
 
 // Tests
 addCommandAlias("tc", "test:compile")

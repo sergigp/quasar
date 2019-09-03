@@ -3,8 +3,10 @@ package com.sergigp.quasar.test
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.sergigp.quasar.event.AsyncEventBus
+import com.sergigp.quasar.query.AsyncQueryBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.EventHandlers
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.event.UserCreatedDomainEvent
+import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, QueryHandlers}
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
 import org.scalatest.concurrent.ScalaFutures
 
@@ -27,9 +29,7 @@ class AsyncEventBusTest extends TestCase {
         e.getMessage should be("handler for UserCreatedDomainEvent not found")
       }
     }
-  }
 
-  "a event bus client" should {
     "receive successful result if user is created" in {
       val eventBus = new AsyncEventBus(logger)
 
@@ -82,7 +82,50 @@ class AsyncEventBusTest extends TestCase {
       ScalaFutures.whenReady(result.failed) { e =>
         e should be(expectedError)
       }
+    }
 
+    "invoke onsuccess hook when success happens" in {
+      var calls = List.empty[String]
+      val successHandler: String => Unit = { event: String =>
+        calls = calls :+ event
+      }
+      val eventBus = new AsyncEventBus(logger, onSuccess = successHandler)
+
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
+
+      eventBus.subscribe[UserCreatedDomainEvent](EventHandlers.handlerWithService(emailSender))
+
+      shouldSendEmail(userEmail)
+
+      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+
+      calls should be(List("UserCreatedDomainEvent"))
+    }
+
+    "invoke onfailure hook when failure happens" in {
+      var calls = List.empty[String]
+      val failedHandler: Throwable => Unit = { error: Throwable =>
+        calls = calls :+ error.getMessage
+      }
+      val eventBus = new AsyncEventBus(logger, onFailure = failedHandler)
+
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
+
+      eventBus.subscribe[UserCreatedDomainEvent](EventHandlers.handlerWithService(emailSender))
+
+      shouldFailSendingEmail(userEmail)
+
+      val result = eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e.getMessage should be("expected exception")
+      }
+
+      calls should be(List("expected exception"))
     }
   }
 }

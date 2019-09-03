@@ -9,6 +9,9 @@ object CommandHandlers {
   val dummyHandler: AddDummyUserCommand => Future[Either[AddDummyUserError, Unit]] =
     (_: AddDummyUserCommand) => Future.successful(Right(()))
 
+  val dummyFailingHandler: AddDummyUserCommand => Future[Either[AddDummyUserError, Unit]] =
+    (_: AddDummyUserCommand) => Future.failed(new RuntimeException("expected exception"))
+
   def handlerWithService(
     userAdder: UserAdder
   ): AddDummyUserCommand => Future[Either[AddDummyUserError, Unit]] =

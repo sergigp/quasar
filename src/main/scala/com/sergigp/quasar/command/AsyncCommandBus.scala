@@ -5,14 +5,19 @@ import scala.reflect.ClassTag
 
 import org.slf4j.Logger
 
-class AsyncCommandBus(logger: Logger)(implicit ec: ExecutionContext) extends CommandBus[Future] {
+class AsyncCommandBus(
+  logger: Logger,
+  onSuccess: String => Unit = _ => (),
+  onFailure: Throwable => Unit = _ => ()
+)(implicit ec: ExecutionContext)
+    extends CommandBus[Future] {
 
   private var handlers = Map.empty[Class[_], Command => Future[Any]]
 
   override def publish[C <: Command](command: C): Future[C#CommandReturnType] =
     handlers
       .get(command.getClass) match {
-      case Some(handler) => handler(command).map(_.asInstanceOf[C#CommandReturnType])
+      case Some(handler) => handleCommand(command, handler)
       case None          => Future.failed(CommandHandlerNotFound(command.getClass.getSimpleName))
     }
 
@@ -27,6 +32,15 @@ class AsyncCommandBus(logger: Logger)(implicit ec: ExecutionContext) extends Com
         handlers = handlers + (classTag.runtimeClass -> transformed)
       }
     }
+  }
+
+  private def handleCommand[C <: Command](command: C, handler: C => Future[Any]): Future[C#CommandReturnType] = {
+    val asyncResult = handler(command).map(_.asInstanceOf[C#CommandReturnType]).map { result =>
+      onSuccess(command.getClass.getSimpleName)
+      result
+    }
+    asyncResult.failed.foreach(onFailure)
+    asyncResult
   }
 
   case class CommandHandlerNotFound(commandName: String) extends Exception(s"handler for $commandName not found")
