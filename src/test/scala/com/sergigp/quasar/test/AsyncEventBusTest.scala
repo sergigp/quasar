@@ -125,7 +125,9 @@ class AsyncEventBusTest extends TestCase {
         e.getMessage should be("expected exception")
       }
 
-      calls should be(List("expected exception"))
+      eventually {
+        calls should be(List("expected exception"))
+      }
     }
   }
 }
