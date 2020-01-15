@@ -20,7 +20,7 @@ Add the bintray resolver and the dependency in your `build.sbt`
 ```
 resolvers += Resolver.bintrayRepo("sergigp", "maven")
 
-libraryDependencies ++= Seq("com.sergigp.quasar" %% "quasar" % "0.1")
+libraryDependencies ++= Seq("com.sergigp.quasar" %% "quasar" % "0.6")
 ```
 
 ## Usage
