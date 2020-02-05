@@ -5,10 +5,11 @@ import scala.reflect.ClassTag
 
 import org.slf4j.Logger
 
-class AsyncEventBus(
+final class AsyncEventBus(
   logger: Logger,
   onSuccess: String => Unit = _ => (),
-  onFailure: Throwable => Unit = _ => ()
+  onFailure: Throwable => Unit = _ => (),
+  onHandlerNotFound: String => Unit = _ => (),
 )(implicit ec: ExecutionContext)
     extends EventBus[Future] {
 
@@ -18,7 +19,9 @@ class AsyncEventBus(
     handlers
       .get(event.getClass) match {
       case Some(handler) => handleEvent(event, handler)
-      case None          => Future.failed(EventHandlerNotFound(event.getClass.getSimpleName))
+      case None          =>
+        onHandlerNotFound(event.getClass.getSimpleName)
+        Future.unit
     }
 
   override def subscribe[E <: Event: ClassTag](handler: E => Future[Unit]): Unit = {
@@ -42,6 +45,4 @@ class AsyncEventBus(
     asyncResult.failed.foreach(onFailure)
     asyncResult
   }
-
-  case class EventHandlerNotFound(eventName: String) extends Exception(s"handler for $eventName not found")
 }
