@@ -3,10 +3,8 @@ package com.sergigp.quasar.test
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.sergigp.quasar.event.AsyncEventBus
-import com.sergigp.quasar.query.AsyncQueryBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.EventHandlers
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.event.UserCreatedDomainEvent
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, QueryHandlers}
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
 import org.scalatest.concurrent.ScalaFutures
 
@@ -18,16 +16,19 @@ class AsyncEventBusTest extends TestCase {
       eventBus.subscribe[UserCreatedDomainEvent](EventHandlers.dummyHandler)
     }
 
-    "throw an error if don't find a event handler for an event" in {
-      val eventBus = new AsyncEventBus(logger)
+    "don't throw an error if don't find a event handler for an event" in {
+      var calls = List.empty[String]
+      val notFoundHandler: String => Unit = { event: String =>
+        calls = calls :+ event
+      }
+      val eventBus = new AsyncEventBus(logger, onHandlerNotFound = notFoundHandler)
 
       val result = eventBus.publish(
         UserCreatedDomainEvent(UuidStringStub.random, StringStub.random(10), StringStub.random(10))
       )
 
-      ScalaFutures.whenReady(result.failed) { e =>
-        e.getMessage should be("handler for UserCreatedDomainEvent not found")
-      }
+      result.futureValue should be (())
+      calls should be(List("UserCreatedDomainEvent"))
     }
 
     "receive successful result if user is created" in {
