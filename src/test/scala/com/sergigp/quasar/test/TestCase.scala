@@ -7,7 +7,7 @@ import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.AddDummyU
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
 import com.sergigp.quasar.test.dummy.modules.dummyuser.domain.add.UserAdder
 import com.sergigp.quasar.test.dummy.modules.dummyuser.domain.find.UserFinder
-import com.sergigp.quasar.test.dummy.modules.dummyuser.domain.send.EmailSender
+import com.sergigp.quasar.test.dummy.modules.dummyuser.domain.send.{EmailSender, PushSender}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -30,6 +30,7 @@ abstract class TestCase
   val userFinder: UserFinder   = mock[UserFinder]
   val userAdder: UserAdder     = mock[UserAdder]
   val emailSender: EmailSender = mock[EmailSender]
+  val pushSender: PushSender   = mock[PushSender]
 
   def shouldFindUser(userId: String, user: DummyUser): Unit =
     (userFinder.find _)
@@ -76,6 +77,12 @@ abstract class TestCase
   def shouldReturnErrorSendingEmail(email: String, error: Throwable): Unit =
     (emailSender.send _)
       .expects(email)
+      .once()
+      .returns(Future.failed(error))
+
+  def shouldReturnErrorSendingPush(userId: String, error: Throwable): Unit =
+    (pushSender.send _)
+      .expects(userId)
       .once()
       .returns(Future.failed(error))
 }
