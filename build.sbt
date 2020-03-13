@@ -1,7 +1,7 @@
 organization := "com.sergigp.quasar"
 name := "quasar"
 
-version := "0.7"
+version := "0.8"
 
 homepage := Some(url("https://github.com/sergigp/quasar"))
 
