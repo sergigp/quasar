@@ -8,7 +8,8 @@ import org.slf4j.Logger
 class AsyncCommandBus(
   logger: Logger,
   onSuccess: String => Unit = _ => (),
-  onFailure: Throwable => Unit = _ => ()
+  onFailure: Throwable => Unit = _ => (),
+  recordLatencyInMillis: (String, Long, Long) => Unit = (_, _, _) => ()
 )(implicit ec: ExecutionContext)
     extends CommandBus[Future] {
 
@@ -35,11 +36,16 @@ class AsyncCommandBus(
   }
 
   private def handleCommand[C <: Command](command: C, handler: C => Future[Any]): Future[C#CommandReturnType] = {
+    val before = System.currentTimeMillis()
     val asyncResult = handler(command).map(_.asInstanceOf[C#CommandReturnType]).map { result =>
       onSuccess(command.getClass.getSimpleName)
+      recordLatencyInMillis(command.getClass.getSimpleName, before, System.currentTimeMillis())
       result
     }
-    asyncResult.failed.foreach(onFailure)
+    asyncResult.failed.foreach { error =>
+      recordLatencyInMillis(command.getClass.getSimpleName, before, System.currentTimeMillis())
+      onFailure(error)
+    }
     asyncResult
   }
 
