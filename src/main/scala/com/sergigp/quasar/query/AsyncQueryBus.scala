@@ -8,7 +8,8 @@ import org.slf4j.Logger
 final class AsyncQueryBus(
   logger: Logger,
   onSuccess: String => Unit = _ => (),
-  onFailure: Throwable => Unit = _ => ()
+  onFailure: Throwable => Unit = _ => (),
+  recordLatencyInMillis: (String, Long, Long) => Unit = (_, _, _) => ()
 )(implicit ec: ExecutionContext)
     extends QueryBus[Future] {
 
@@ -35,11 +36,16 @@ final class AsyncQueryBus(
   }
 
   private def handleQuery[Q <: Query](query: Q, handler: Q => Future[Any]): Future[Q#QueryResponse] = {
+    val before = System.currentTimeMillis()
     val asyncResult = handler(query).map(_.asInstanceOf[Q#QueryResponse]).map { result =>
       onSuccess(query.getClass.getSimpleName)
+      recordLatencyInMillis(query.getClass.getSimpleName, before, System.currentTimeMillis())
       result
     }
-    asyncResult.failed.foreach(onFailure)
+    asyncResult.failed.foreach { error =>
+      recordLatencyInMillis(query.getClass.getSimpleName, before, System.currentTimeMillis())
+      onFailure(error)
+    }
     asyncResult
   }
 

@@ -45,6 +45,23 @@ class AsyncCommandBusTest extends TestCase {
       calls should be(List("AddDummyUserCommand"))
     }
 
+    "invoke recordLatencyInMillis hook when success happens" in {
+      var calls = List.empty[String]
+
+      def recordLatencyInMillis(name: String, now: Long, after: Long): Unit =
+        calls = calls :+ name
+
+      val commandBus = new AsyncCommandBus(logger, recordLatencyInMillis = recordLatencyInMillis)
+      commandBus.subscribe[AddDummyUserCommand](CommandHandlers.dummyHandler)
+
+      val result = commandBus.publish(
+        AddDummyUserCommand(UuidStringStub.random, StringStub.random(10), StringStub.random(10))
+      )
+
+      result.futureValue should be(Right(()))
+      calls should be(List("AddDummyUserCommand"))
+    }
+
     "invoke onfailure hook when failure happens" in {
       var calls = List.empty[String]
       val failedHandler: Throwable => Unit = { error: Throwable =>

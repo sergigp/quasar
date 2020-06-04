@@ -2,11 +2,9 @@ package com.sergigp.quasar.test
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.sergigp.quasar.command.AsyncCommandBus
 import com.sergigp.quasar.query.AsyncQueryBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.DummyUser
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.DummyUserResponse
-import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.{AddDummyUserCommand, CommandHandlers}
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.{FindDummyUserQuery, QueryHandlers}
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.find.FindDummyUserError.DummyUserNotFoundError
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
@@ -71,6 +69,28 @@ class AsyncQueryBusTest extends TestCase {
 
       eventually {
         calls should be(List("expected exception"))
+      }
+    }
+
+    "invoke recordLatencyInMillis hook when failure happens" in {
+      var calls = List.empty[String]
+      def recordLatencyInMillis(name: String, now: Long, after: Long): Unit =
+        calls = calls :+ name
+
+      val userId   = UuidStringStub.random
+      val queryBus = new AsyncQueryBus(logger, recordLatencyInMillis = recordLatencyInMillis)
+      queryBus.subscribe[FindDummyUserQuery](QueryHandlers.dummyHandler(userFinder))
+
+      shouldFailFindingUser(userId)
+
+      val result = queryBus.ask(FindDummyUserQuery(userId))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e.getMessage should be("expected exception")
+      }
+
+      eventually {
+        calls should be(List("FindDummyUserQuery"))
       }
     }
 
