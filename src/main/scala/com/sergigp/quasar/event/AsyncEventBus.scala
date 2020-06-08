@@ -5,7 +5,8 @@ import scala.reflect.ClassTag
 
 final class AsyncEventBus(
   onSuccess: String => Unit = _ => (),
-  onFailure: Throwable => Unit = _ => ()
+  onFailure: Throwable => Unit = _ => (),
+  recordLatencyInMillis: (String, Long, Long) => Unit = (_, _, _) => ()
 )(implicit ec: ExecutionContext)
     extends EventBus[Future] {
 
@@ -34,11 +35,16 @@ final class AsyncEventBus(
   }
 
   private def handleEvent[E <: Event](event: E, handler: E => Future[Unit]): Future[Unit] = {
+    val before = System.currentTimeMillis()
     val asyncResult = handler(event).map { result =>
       onSuccess(event.getClass.getSimpleName)
+      recordLatencyInMillis(event.getClass.getSimpleName, before, System.currentTimeMillis())
       result
     }
-    asyncResult.failed.foreach(onFailure)
+    asyncResult.failed.foreach { error =>
+      recordLatencyInMillis(event.getClass.getSimpleName, before, System.currentTimeMillis())
+      onFailure(error)
+    }
     asyncResult
   }
 }
