@@ -93,6 +93,27 @@ class AsyncEventBusTest extends TestCase {
       calls should be(List("UserCreatedDomainEvent"))
     }
 
+    "invoke recordLatencyInMillis hook when success happens" in {
+      var calls = List.empty[String]
+
+      def recordLatencyInMillis(name: String, now: Long, after: Long): Unit =
+        calls = calls :+ name
+
+      val eventBus = new AsyncEventBus(recordLatencyInMillis = recordLatencyInMillis)
+
+      val userId    = UuidStringStub.random
+      val userName  = StringStub.random(10)
+      val userEmail = StringStub.random(10)
+
+      eventBus.subscribe[UserCreatedDomainEvent](EventHandlers.handlerWithEmailSender(emailSender))
+
+      shouldSendEmail(userEmail)
+
+      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+
+      calls should be(List("UserCreatedDomainEvent"))
+    }
+
     "invoke onfailure hook when failure happens" in {
       var calls = List.empty[String]
       val failedHandler: Throwable => Unit = { error: Throwable =>
