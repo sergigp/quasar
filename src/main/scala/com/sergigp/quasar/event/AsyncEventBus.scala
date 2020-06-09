@@ -16,9 +16,7 @@ final class AsyncEventBus(
     val results = handlers.getOrElse(event.getClass, List.empty[Event => Future[Unit]]).map { handler =>
       handleEvent(event, handler)
     }
-    Future.sequence(results).map(_ => ()).recoverWith {
-      case _ => Future.successful(())
-    }
+    Future.sequence(results).map(_ => ())
   }
 
   override def subscribe[E <: Event: ClassTag](handler: E => Future[Unit]): Unit = {
