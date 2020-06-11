@@ -6,6 +6,7 @@ import com.sergigp.quasar.event.AsyncEventBus
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.add.EventHandlers
 import com.sergigp.quasar.test.dummy.modules.dummyuser.application.event.UserCreatedDomainEvent
 import com.sergigp.quasar.test.stub.{StringStub, UuidStringStub}
+import org.scalatest.concurrent.ScalaFutures
 
 class AsyncEventBusTest extends TestCase {
   "a event bus" should {
@@ -23,7 +24,7 @@ class AsyncEventBusTest extends TestCase {
       eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
     }
 
-    "don't get an error even if can't send email" in {
+    "get an error if can't send email" in {
       val eventBus  = new AsyncEventBus()
       val userId    = UuidStringStub.random
       val userName  = StringStub.random(10)
@@ -33,7 +34,9 @@ class AsyncEventBusTest extends TestCase {
       val expectedError = new RuntimeException("expected error")
       shouldReturnErrorSendingEmail(userEmail, expectedError)
 
-      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+      ScalaFutures.whenReady(eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).failed) { e =>
+        e shouldBe a[RuntimeException]
+      }
     }
 
     "subscribe multiple handlers" in {
@@ -54,7 +57,7 @@ class AsyncEventBusTest extends TestCase {
       eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
     }
 
-    "subscribe multiple handlers and return success even if one of them fails" in {
+    "subscribe multiple handlers and return error if one of them fails" in {
       val eventBus = new AsyncEventBus()
 
       val userId    = UuidStringStub.random
@@ -70,7 +73,9 @@ class AsyncEventBusTest extends TestCase {
       shouldReturnErrorSendingPush(userId, expectedError)
       shouldSendEmail(userEmail)
 
-      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+      ScalaFutures.whenReady(eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).failed) { e =>
+        e shouldBe a[RuntimeException]
+      }
     }
 
     "invoke onsuccess hook when success happens" in {
@@ -129,7 +134,9 @@ class AsyncEventBusTest extends TestCase {
 
       shouldFailSendingEmail(userEmail)
 
-      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+      ScalaFutures.whenReady(eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).failed) { e =>
+        e shouldBe a[RuntimeException]
+      }
 
       eventually {
         calls should be(List("expected exception"))
@@ -156,7 +163,9 @@ class AsyncEventBusTest extends TestCase {
       shouldReturnErrorSendingPush(userId, new RuntimeException("expected error"))
       shouldSendEmail(userEmail)
 
-      eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).futureValue should be(())
+      ScalaFutures.whenReady(eventBus.publish(UserCreatedDomainEvent(userId, userName, userEmail)).failed) { e =>
+        e shouldBe a[RuntimeException]
+      }
 
       eventually {
         calls should be(List("expected error"))
